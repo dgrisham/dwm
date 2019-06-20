@@ -43,6 +43,7 @@
 
 #include "drw.h"
 #include "util.h"
+#include "log.h"
 
 /* macros */
 #define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
@@ -267,6 +268,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
+static FILE *fpLog;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -491,6 +493,8 @@ cleanup(void)
 	XSync(dpy, False);
 	XSetInputFocus(dpy, PointerRoot, RevertToPointerRoot, CurrentTime);
 	XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
+
+    fclose(fpLog);
 }
 
 void
@@ -1595,6 +1599,14 @@ setup(void)
 	XSelectInput(dpy, root, wa.event_mask);
 	grabkeys();
 	focus(NULL);
+
+    if (Logfile != NULL) {
+        fpLog = fopen(Logfile, "w");
+        if (fpLog != NULL) {
+            log_set_fp(fpLog);
+            log_set_level(LOG_DEBUG);
+        }
+    }
 }
 
 
