@@ -43,6 +43,9 @@ static const Layout layouts[] = {
 	{ "[M]",      monocle },
 };
 
+// static const char* Logfile = "/var/log/dwm/debug.log";
+static const char* Logfile = NULL;
+
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
