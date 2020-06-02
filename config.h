@@ -11,8 +11,8 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 enum showtab_modes { showtab_never, showtab_auto, showtab_nmodes, showtab_always};
 static const int showtab			= showtab_auto;        /* Default tab bar show mode */
 static const int toptab				= False;               /* False means bottom tab bar */
-static const char *fonts[]          = { "xft:Inconsolata Nerd Font:size=10" };
-static const char dmenufont[]       = "xft:Inconsolata Nerd Font:size=10";
+static const char *fonts[]          = { "Inconsolata:pixelsize=14:antialias=true" };
+static const char dmenufont[]       = "Inconsolata:pixelsize=14:antialias=true";
 static const char col_white[]       = "#ffffff";
 static const char col_black[]       = "#000000";
 static const char col_gray1[]       = "#222222";
