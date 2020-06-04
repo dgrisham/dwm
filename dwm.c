@@ -472,23 +472,23 @@ buttonpress(XEvent *e)
 		else
 			click = ClkWinTitle;
 	}
-	if(ev->window == selmon->tabwin) {
+	if (ev->window == selmon->tabwin) {
 		i = 0; x = 0;
-		for(c = selmon->clients; c; c = c->next){
-			if(!ISVISIBLE(c)) continue;
+		for (c = selmon->clients; c; c = c->next) {
+			if (!ISVISIBLE(c)) continue;
 			x += selmon->tab_widths[i];
 			if (ev->x > x)
 				++i;
 			else
 				break;
-			if(i >= m->ntabs && (m->lt[m->sellt]->arrange != tiletab)) break;
+			if (i >= m->ntabs && (m->lt[m->sellt]->arrange != tiletab)) break;
 		}
-		if(c) {
+		if (c) {
 			click = ClkTabBar;
 			arg.ui = i;
 		}
 	}
-	else if((c = wintoclient(ev->window))) {
+	else if ((c = wintoclient(ev->window))) {
 		if (focusonwheel || (ev->button != Button4 && ev->button != Button5))
 			focus(c);
 		XAllowEvents(dpy, ReplayPointer, CurrentTime);
@@ -496,7 +496,7 @@ buttonpress(XEvent *e)
 	}
 	for (i = 0; i < LENGTH(buttons); i++)
 		if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
-		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state)){
+		&& CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state)) {
 			buttons[i].func(((click == ClkTagBar || click == ClkTabBar) && buttons[i].arg.i == 0) ? &arg : &buttons[i].arg);
 		}
 }
@@ -1957,12 +1957,14 @@ tiletab(Monitor *m)
 {
 	unsigned int i, n, mw, my, ty;
 	Client *c;
+	char left, right;
 
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
-	if (n == 0)
-		return;
-	if (n > 0) /* override layout symbol */
-		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]=", n);
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), ++n);
+	if (n == 0) return;
+
+	left = m->nmaster ? (m->nmaster + '0') : 'T';
+	right = n - m->nmaster ? (n - m->nmaster + '0') : 'T';
+	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,%c>", left, right);
 
 	if (n > m->nmaster)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
@@ -1992,13 +1994,12 @@ togglebar(const Arg *arg)
 void
 tabmode(const Arg *arg)
 {
-	if(arg && arg->i >= 0)
+	if (arg && arg->i >= 0)
 		selmon->showtab = arg->ui % showtab_nmodes;
 	else
-		selmon->showtab = (selmon->showtab + 1 ) % showtab_nmodes;
+		selmon->showtab = (selmon->showtab + 1) % showtab_nmodes;
 	arrange(selmon);
 }
-
 
 void
 togglefloating(const Arg *arg)
