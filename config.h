@@ -51,6 +51,7 @@ static const Layout layouts[] = {
 	{ "[]=",      tile },    /* first entry is default */
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
+	{ "[M]=",     tiletab },
 };
 
 // static const char* Logfile = "/var/log/dwm/debug.log";
@@ -81,7 +82,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_b,      spawn,             {.v = browsercmd } },
 	{ MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
-	{ MODKEY,                       XK_w,      tabmode,        {-1} },
+	{ MODKEY,                       XK_w,      tabmode,           {-1} },
 	{ MODKEY,                       XK_j,      focusstack,        {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,        {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,        {.i = +1 } },
@@ -95,6 +96,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_F1,     setlayout,         {.v = &layouts[0]} },
 	{ MODKEY,                       XK_F2,     setlayout,         {.v = &layouts[1]} },
 	{ MODKEY,                       XK_F3,     setlayout,         {.v = &layouts[2]} },
+	{ MODKEY,                       XK_F4,     setlayout,         {.v = &layouts[3]} },
 	{ MODKEY|ShiftMask,             XK_m,      monocle_togglebar, {0} },
 	{ MODKEY,                       XK_space,  setlayout,         {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating,    {0} },
