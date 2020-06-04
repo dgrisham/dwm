@@ -11,8 +11,8 @@ static const int topbar             = 1;        /* 0 means bottom bar */
 enum showtab_modes { showtab_never, showtab_auto, showtab_nmodes, showtab_always};
 static const int showtab			= showtab_auto;        /* Default tab bar show mode */
 static const int toptab				= False;               /* False means bottom tab bar */
-static const char *fonts[]          = { "Inconsolata Nerd Font Mono:style=Medium" };
-static const char dmenufont[]       = "Inconsolata Nerd Font Mono:style=Medium";
+static const char *fonts[]          = { "Inconsolata Nerd Font Mono:pixelsize=16:antialias=true" };
+static const char dmenufont[]       = "Inconsolata Nerd Font Mono:pixelsize=16:antialias=true";
 static const char col_white[]       = "#ffffff";
 static const char col_black[]       = "#000000";
 static const char col_gray1[]       = "#222222";
@@ -51,6 +51,7 @@ static const Layout layouts[] = {
 	{ "[]=",      tile },    /* first entry is default */
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
+	{ "[M]=",     tiletab },
 };
 
 // static const char* Logfile = "/var/log/dwm/debug.log";
@@ -69,7 +70,7 @@ static const char* Logfile = NULL;
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[]    = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+static const char *dmenucmd[]    = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_black, "-nf", col_white, "-sb", col_white, "-sf", col_black, NULL };
 static const char *termcmd[]     = { "urxvt", NULL };
 static const char *browsercmd[]  = { "chromium", NULL };
 static const char *musiccmd[]    = { "spotify", NULL };
@@ -81,7 +82,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_b,      spawn,             {.v = browsercmd } },
 	{ MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
-	{ MODKEY,                       XK_w,      tabmode,        {-1} },
+	{ MODKEY,                       XK_w,      tabmode,           {-1} },
 	{ MODKEY,                       XK_j,      focusstack,        {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,        {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,        {.i = +1 } },
@@ -95,6 +96,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_F1,     setlayout,         {.v = &layouts[0]} },
 	{ MODKEY,                       XK_F2,     setlayout,         {.v = &layouts[1]} },
 	{ MODKEY,                       XK_F3,     setlayout,         {.v = &layouts[2]} },
+	{ MODKEY,                       XK_F4,     setlayout,         {.v = &layouts[3]} },
 	{ MODKEY|ShiftMask,             XK_m,      monocle_togglebar, {0} },
 	{ MODKEY,                       XK_space,  setlayout,         {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating,    {0} },

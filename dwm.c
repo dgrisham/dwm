@@ -224,6 +224,7 @@ static void tabmode(const Arg *arg);
 static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *);
+static void tiletab(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscr(const Arg *arg);
@@ -480,7 +481,7 @@ buttonpress(XEvent *e)
 				++i;
 			else
 				break;
-			if(i >= m->ntabs) break;
+			if(i >= m->ntabs && (m->lt[m->sellt]->arrange != tiletab)) break;
 		}
 		if(c) {
 			click = ClkTabBar;
@@ -848,12 +849,15 @@ drawtab(Monitor *m) {
 	int sorted_label_widths[MAXTABS];
 	int tot_width;
 	int maxsize = bh;
+	int lmaxsize = bh;
+	int rmaxsize = bh;
 	int x = 0;
 	int w = 0;
+	unsigned int mw;
 
 	//view_info: indicate the tag which is displayed in the view
-	for(i = 0; i < LENGTH(tags); ++i){
-	  if((selmon->tagset[selmon->seltags] >> i) & 1) {
+	for (i = 0; i < LENGTH(tags); ++i) {
+	  if ((selmon->tagset[selmon->seltags] >> i) & 1) {
 	    if(itag >=0){ //more than one tag selected
 	      itag = -1;
 	      break;
@@ -862,7 +866,7 @@ drawtab(Monitor *m) {
 	  }
 	}
 
-	if(0 <= itag  && itag < LENGTH(tags)){
+	if (0 <= itag && itag < LENGTH(tags)) {
 	  snprintf(view_info, sizeof view_info, "[%s]", tags[itag]);
 	} else {
 	  strncpy(view_info, "[...]", sizeof view_info);
@@ -870,40 +874,116 @@ drawtab(Monitor *m) {
 	view_info[sizeof(view_info) - 1 ] = 0;
 	view_info_w = TEXTW(view_info);
 	tot_width = view_info_w;
+	int ltot_width = 0; // TODO: what to initialize this to?
+	int rtot_width = view_info_w; // TODO: what to initialize this to?
 
 	/* Calculates number of labels and their width */
 	m->ntabs = 0;
-	for(c = m->clients; c; c = c->next){
-	  if(!ISVISIBLE(c)) continue;
+	int ltabs = 0;
+	for (c = m->clients; c; c = c->next) {
+	  if (!ISVISIBLE(c)) continue;
 	  m->tab_widths[m->ntabs] = TEXTW(c->name);
 	  tot_width += m->tab_widths[m->ntabs];
+	  if (m->ntabs < m->nmaster) {
+    	  ++ltabs;
+    	  ltot_width += m->tab_widths[m->ntabs];
+	  } else {
+    	  rtot_width += m->tab_widths[m->ntabs];
+	  }
+
 	  ++m->ntabs;
-	  if(m->ntabs >= MAXTABS) break;
+	  if (m->ntabs >= MAXTABS && (m->lt[m->sellt]->arrange != tiletab)) break;
 	}
 
-	if(tot_width > m->ww){ //not enough space to display the labels, they need to be truncated
-	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
-	  qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
-	  tot_width = view_info_w;
-	  for(i = 0; i < m->ntabs; ++i){
-	    if(tot_width + (m->ntabs - i) * sorted_label_widths[i] > m->ww)
-	      break;
-	    tot_width += sorted_label_widths[i];
-	  }
-	  maxsize = (m->ww - tot_width) / (m->ntabs - i);
-	} else{
-	  maxsize = m->ww;
+	if (m->lt[m->sellt]->arrange == tiletab) {
+    	if (m->ntabs > m->nmaster) {
+    		mw = m->nmaster ? m->ww * m->mfact : 0;
+    	} else {
+    		mw = m->ww;
+    	}
+
+		// left tabs
+		if (ltot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+ 			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+ 			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+	  		ltot_width = 0;
+	  		for (int i = 0; i < ltabs; ++i) {
+    	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
+				break;
+			ltot_width += sorted_label_widths[i];
+		}
+			lmaxsize = (m->wx + mw - ltot_width) / (ltabs - i);
+    	} else {
+			lmaxsize = m->wx + mw;
+    	}
+
+    	i = 0;
+    	for (c = m->clients; c; c = c->next) {
+    	  if (!ISVISIBLE(c)) continue;
+    	  if (i >= ltabs) break;
+    	  if (m->tab_widths[i] > lmaxsize) m->tab_widths[i] = lmaxsize;
+    	  w = m->tab_widths[i];
+    	  drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+    	  drw_text(drw, x, 0, w, th, 0, c->name, 0);
+    	  x += w;
+    	  ++i;
+    	}
+
+		// right tabs
+    	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+			rtot_width = view_info_w;
+    	  for (int i = ltabs + 1; i < m->ntabs; ++i) {
+    	    if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
+    	      break;
+    	    rtot_width += sorted_label_widths[i];
+    	  }
+    	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
+    	} else {
+    	  rmaxsize = (m->ww - m->wx + mw);
+    	}
+
+    	w = m->wx + mw - x;
+    	drw_text(drw, x, 0, w, th, 0, "", 0);
+    	x += w;
+
+    	for (; c; c = c->next) {
+			if (!ISVISIBLE(c)) continue;
+			if (i >= m->ntabs) break;
+			if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
+			w = m->tab_widths[i];
+			drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+			drw_text(drw, x, 0, w, th, 0, c->name, 0);
+			x += w;
+			++i;
+		}
 	}
-	i = 0;
-	for(c = m->clients; c; c = c->next){
-	  if(!ISVISIBLE(c)) continue;
-	  if(i >= m->ntabs) break;
-	  if(m->tab_widths[i] >  maxsize) m->tab_widths[i] = maxsize;
-	  w = m->tab_widths[i];
-	  drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
-	  drw_text(drw, x, 0, w, th, 0, c->name, 0);
-	  x += w;
-	  ++i;
+	else {
+    	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+    	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+    	  qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+    	  tot_width = view_info_w;
+    	  for (i = 0; i < m->ntabs; ++i) {
+    	    if (tot_width + (m->ntabs - i) * sorted_label_widths[i] > m->ww)
+    	      break;
+    	    tot_width += sorted_label_widths[i];
+    	  }
+    	  maxsize = (m->ww - tot_width) / (m->ntabs - i);
+    	} else {
+    	  maxsize = m->ww;
+    	}
+    	i = 0;
+    	for (c = m->clients; c; c = c->next) {
+    	  if (!ISVISIBLE(c)) continue;
+    	  if (i >= m->ntabs) break;
+    	  if (m->tab_widths[i] >  maxsize) m->tab_widths[i] = maxsize;
+    	  w = m->tab_widths[i];
+    	  drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+    	  drw_text(drw, x, 0, w, th, 0, c->name, 0);
+    	  x += w;
+    	  ++i;
+    	}
 	}
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
@@ -1872,6 +1952,49 @@ tile(Monitor *m)
 		}
 }
 
+// void
+// monocle(Monitor *m)
+// {
+// 	unsigned int n = 0;
+// 	Client *c;
+
+// 	for (c = m->clients; c; c = c->next)
+// 		if (ISVISIBLE(c))
+// 			n++;
+// 	if (n > 0) /* override layout symbol */
+// 		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
+// 	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
+// 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
+// }
+
+void
+tiletab(Monitor *m)
+{
+	unsigned int i, n, mw, my, ty;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+	if (n == 0)
+		return;
+	if (n > 0) /* override layout symbol */
+		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]=", n);
+
+	if (n > m->nmaster)
+		mw = m->nmaster ? m->ww * m->mfact : 0;
+	else
+		mw = m->ww;
+	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+		if (i < m->nmaster) {
+			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
+			if (my + HEIGHT(c) < m->wh)
+				my += HEIGHT(c);
+		} else {
+			resize(c, m->wx + mw, m->wy, m->ww - mw - (2*c->bw), m->wh - 2 * c->bw, 0);
+			if (ty + HEIGHT(c) < m->wh)
+				ty += HEIGHT(c);
+		}
+}
+
 void
 togglebar(const Arg *arg)
 {
@@ -2048,6 +2171,8 @@ updatebarpos(Monitor *m)
 {
 	Client *c;
 	int nvis = 0;
+	int lvis = 0;
+	int rvis = 0;
 
 	m->wy = m->my;
 	m->wh = m->mh;
@@ -2060,12 +2185,24 @@ updatebarpos(Monitor *m)
 		m->by = -bh;
 	}
 
-	for(c = m->clients; c; c = c->next) {
-		if(ISVISIBLE(c)) ++nvis;
+    int i = 0;
+	for (c = m->clients; c; c = c->next) {
+		if (ISVISIBLE(c)) ++nvis;
+		if (ISVISIBLE(c)) {
+            if (i < m->nmaster)
+                ++lvis;
+            else
+                ++rvis;
+		}
+		++i;
 	}
 
-	if(m->showtab == showtab_always
-	   || ((m->showtab == showtab_auto) && (nvis > 1) && (m->lt[m->sellt]->arrange == monocle))) {
+	if  (m->showtab == showtab_always || (
+    		(m->showtab == showtab_auto) && ((nvis > 1) && (m->lt[m->sellt]->arrange == monocle))
+    	) || (
+    		((lvis > 1) || (rvis > 1)) && (m->lt[m->sellt]->arrange == tiletab)
+		)
+	) {
 		m->wh -= th;
 		m->ty = m->toptab ? m->wy : m->wy + m->wh;
 		if ( m->toptab )
