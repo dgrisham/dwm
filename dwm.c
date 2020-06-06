@@ -1938,7 +1938,7 @@ tile(Monitor *m)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
 	else
 		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
 		if (i < m->nmaster) {
 			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
@@ -1950,6 +1950,7 @@ tile(Monitor *m)
 			if (ty + HEIGHT(c) < m->wh)
 				ty += HEIGHT(c);
 		}
+	}
 }
 
 void
@@ -1970,7 +1971,7 @@ tiletab(Monitor *m)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
 	else
 		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
 		if (i < m->nmaster) {
 			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
 			if (my + HEIGHT(c) < m->wh)
@@ -1980,6 +1981,7 @@ tiletab(Monitor *m)
 			if (ty + HEIGHT(c) < m->wh)
 				ty += HEIGHT(c);
 		}
+	}
 }
 
 void
@@ -2183,7 +2185,7 @@ updatebarpos(Monitor *m)
 		++i;
 	}
 
-	if  (m->showtab == showtab_always || (
+	if (m->showtab == showtab_always || (
     		(m->showtab == showtab_auto) && ((nvis > 1) && (m->lt[m->sellt]->arrange == monocle))
     	) || (
     		((lvis > 1) || (rvis > 1)) && (m->lt[m->sellt]->arrange == tiletab)
