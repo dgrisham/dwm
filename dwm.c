@@ -141,6 +141,7 @@ struct Monitor {
 	int tab_widths[MAXTABS];
 	const Layout *lt[2];
 	Pertag *pertag;
+	int view_info_w;
 };
 
 typedef struct {
@@ -443,7 +444,7 @@ attachstack(Client *c)
 void
 buttonpress(XEvent *e)
 {
-	unsigned int i, x, click;
+	unsigned int i, x, mw, click;
 	Arg arg = {0};
 	Client *c;
 	Monitor *m;
@@ -477,6 +478,13 @@ buttonpress(XEvent *e)
 		for (c = selmon->clients; c; c = c->next) {
 			if (!ISVISIBLE(c)) continue;
 			x += selmon->tab_widths[i];
+			if (i == m->nmaster-1) { // tiletab: last tab on left (master) side
+                mw = m->nmaster ? m->ww * m->mfact : 0;
+            	x = m->wx + mw;
+			} else if (i == m->ntabs-1 && m->ntabs > m->nmaster) { // tiletab: last tab on right side
+    			x = m->ww - m->view_info_w;
+			}
+
 			if (ev->x > x)
 				++i;
 			else
@@ -845,14 +853,17 @@ drawtab(Monitor *m) {
 	int i;
 	int itag = -1;
 	char view_info[50];
-	int view_info_w = 0;
+	// int view_info_w = 0;
 	int sorted_label_widths[MAXTABS];
 	int tot_width;
+	int ltot_width = 0;
+	int rtot_width;
 	int maxsize = bh;
 	int lmaxsize = bh;
 	int rmaxsize = bh;
 	int x = 0;
 	int w = 0;
+	int ltabs;
 	unsigned int mw;
 
 	//view_info: indicate the tag which is displayed in the view
@@ -873,14 +884,14 @@ drawtab(Monitor *m) {
 	}
 
 	view_info[sizeof(view_info) - 1 ] = 0;
-	view_info_w = TEXTW(view_info);
-	tot_width = view_info_w;
-	int ltot_width = 0; // TODO: what to initialize this to?
-	int rtot_width = view_info_w; // TODO: what to initialize this to?
+	m->view_info_w = TEXTW(view_info);
+
+	tot_width = m->view_info_w;
+	rtot_width = m->view_info_w;
 
 	/* Calculates number of labels and their width */
 	m->ntabs = 0;
-	int ltabs = 0;
+	ltabs = 0;
 	for (c = m->clients; c; c = c->next) {
 	  if (!ISVISIBLE(c)) continue;
 	  m->tab_widths[m->ntabs] = TEXTW(c->name);
@@ -934,7 +945,7 @@ drawtab(Monitor *m) {
     	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
 			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
 			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
-			rtot_width = view_info_w;
+			rtot_width = m->view_info_w;
     	  for (int i = ltabs + 1; i < m->ntabs; ++i) {
     	    if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
     	      break;
@@ -945,15 +956,16 @@ drawtab(Monitor *m) {
     	  rmaxsize = (m->ww - m->wx + mw);
     	}
 
-    	w = m->wx + mw - x;
-    	drw_text(drw, x, 0, w, th, 0, "", 0);
-    	x += w;
+    	w = m->wx + mw;
+    	drw_text(drw, x, 0, w - x, th, 0, "", 0);
+    	x = w;
 
     	for (; c; c = c->next) {
 			if (!ISVISIBLE(c)) continue;
 			if (i >= m->ntabs) break;
 			if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
 			w = m->tab_widths[i];
+			if (i == m->ntabs-1) w = m->ww - m->view_info_w - x;
 			drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
 			drw_text(drw, x, 0, w, th, 0, c->name, 0);
 			x += w;
@@ -964,7 +976,7 @@ drawtab(Monitor *m) {
     	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
     	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
     	  qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
-    	  tot_width = view_info_w;
+    	  tot_width = m->view_info_w;
     	  for (i = 0; i < m->ntabs; ++i) {
     	    if (tot_width + (m->ntabs - i) * sorted_label_widths[i] > m->ww)
     	      break;
@@ -990,12 +1002,12 @@ drawtab(Monitor *m) {
 	drw_setscheme(drw, scheme[SchemeNorm]);
 
 	/* cleans interspace between window names and current viewed tag label */
-	w = m->ww - view_info_w - x;
+	w = m->ww - m->view_info_w - x;
 	drw_text(drw, x, 0, w, th, 0, "", 0);
 
 	/* view info */
 	x += w;
-	w = view_info_w;
+	w = m->view_info_w;
 	drw_text(drw, x, 0, w, th, 0, view_info, 0);
 
 	drw_map(drw, m->tabwin, 0, 0, m->ww, th);
