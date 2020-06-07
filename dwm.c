@@ -826,7 +826,7 @@ void
 drawtabs(void) {
 	Monitor *m;
 
-	for(m = mons; m; m = m->next)
+	for (m = mons; m; m = m->next)
 		drawtab(m);
 }
 
@@ -858,7 +858,7 @@ drawtab(Monitor *m) {
 	//view_info: indicate the tag which is displayed in the view
 	for (i = 0; i < LENGTH(tags); ++i) {
 	  if ((selmon->tagset[selmon->seltags] >> i) & 1) {
-	    if(itag >=0){ //more than one tag selected
+	    if (itag >=0){ //more than one tag selected
 	      itag = -1;
 	      break;
 	    }
@@ -871,6 +871,7 @@ drawtab(Monitor *m) {
 	} else {
 	  strncpy(view_info, "[...]", sizeof view_info);
 	}
+
 	view_info[sizeof(view_info) - 1 ] = 0;
 	view_info_w = TEXTW(view_info);
 	tot_width = view_info_w;
@@ -1092,10 +1093,10 @@ void
 focuswin(const Arg* arg){
   int iwin = arg->i;
   Client* c = NULL;
-  for(c = selmon->clients; c && (iwin || !ISVISIBLE(c)) ; c = c->next){
-    if(ISVISIBLE(c)) --iwin;
+  for (c = selmon->clients; c && (iwin || !ISVISIBLE(c)) ; c = c->next) {
+    if (ISVISIBLE(c)) --iwin;
   };
-  if(c) {
+  if (c) {
     focus(c);
     restack(selmon);
   }
@@ -1734,7 +1735,7 @@ void
 fullscreen(const Arg *arg)
 {
 	if (selmon->showbar) {
-		for(last_layout = (Layout *)layouts; last_layout != selmon->lt[selmon->sellt]; last_layout++);
+		for (last_layout = (Layout *)layouts; last_layout != selmon->lt[selmon->sellt]; last_layout++);
 		setlayout(&((Arg) { .v = &layouts[2] }));
 	} else {
 		setlayout(&((Arg) { .v = last_layout }));
