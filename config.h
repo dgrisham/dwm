@@ -72,8 +72,8 @@ static const char* Logfile = NULL;
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[]    = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_black, "-nf", col_white, "-sb", col_white, "-sf", col_black, NULL };
 static const char *termcmd[]     = { "urxvt", NULL };
-static const char *browsercmd[]  = { "chromium", NULL };
-static const char *musiccmd[]    = { "spotify", NULL };
+static const char *browsercmd[]  = { "brave", NULL };
+static const char *musiccmd[]    = { "urxvt", "-e", "ncmpcpp", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function           argument */
