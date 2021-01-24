@@ -228,6 +228,7 @@ static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *);
 static void tiletab(Monitor *);
+static void tiletabright(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscr(const Arg *arg);
@@ -901,7 +902,7 @@ drawtab(Monitor *m) {
 	ltabs = 0;
 	for (c = m->clients; c; c = c->next) {
 	  if (!ISVISIBLE(c)) continue;
-	  m->tab_widths[m->ntabs] = TEXTW(c->name);
+      m->tab_widths[m->ntabs] = TEXTW(c->name);
 	  tot_width += m->tab_widths[m->ntabs];
 	  if (m->ntabs < m->nmaster) {
     	  ++ltabs;
@@ -911,7 +912,7 @@ drawtab(Monitor *m) {
 	  }
 
 	  ++m->ntabs;
-	  if (m->ntabs >= MAXTABS && (m->lt[m->sellt]->arrange != tiletab)) break;
+	  if (m->ntabs >= MAXTABS && (m->lt[m->sellt]->arrange != tiletab) && (m->lt[m->sellt]->arrange != tiletabright)) break;
 	}
 
 	if (m->lt[m->sellt]->arrange == tiletab) {
@@ -954,10 +955,74 @@ drawtab(Monitor *m) {
 			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
 			rtot_width = m->view_info_w;
     	  for (int i = ltabs + 1; i < m->ntabs; ++i) {
-    	    if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
-    	      break;
-    	    rtot_width += sorted_label_widths[i];
+    		if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww)) break;
+    		rtot_width += sorted_label_widths[i];
     	  }
+    	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
+    	} else {
+    	  rmaxsize = (m->ww - m->wx + mw);
+    	}
+
+    	w = m->wx + mw;
+    	drw_text(drw, x, 0, w - x, th, 0, "", 0);
+    	x = w;
+
+    	for (; c; c = c->next) {
+	  		if (c != m->sel) continue;
+			if (!ISVISIBLE(c)) continue;
+			if (i >= m->ntabs) break;
+			if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
+			w = m->tab_widths[i];
+			if (i == m->ntabs-1) w = m->ww - m->view_info_w - x;
+			drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+			drw_text(drw, x, 0, w, th, 0, c->name, 0);
+			x += w;
+			++i;
+		}
+	} else if (m->lt[m->sellt]->arrange == tiletabright) {
+    	if (m->ntabs > m->nmaster) {
+    		mw = m->nmaster ? m->ww * m->mfact : 0;
+    	} else {
+    		mw = m->ww;
+    	}
+
+		// left tabs
+		if (ltot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+ 			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+ 			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+	  		ltot_width = 0;
+	  		for (int i = 0; i < ltabs; ++i) {
+    	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
+				break;
+			ltot_width += sorted_label_widths[i];
+		}
+			lmaxsize = (m->wx + mw - ltot_width) / (ltabs - i);
+    	} else {
+			lmaxsize = m->wx + mw;
+    	}
+
+    	i = 0;
+    	for (c = m->clients; c; c = c->next) {
+    	  if (!ISVISIBLE(c)) continue;
+    	  if (i >= ltabs) break;
+    	  if (m->tab_widths[i] > lmaxsize) m->tab_widths[i] = lmaxsize;
+    	  w = m->tab_widths[i];
+    	  drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+    	  drw_text(drw, x, 0, w, th, 0, c->name, 0);
+    	  x += w;
+    	  ++i;
+    	}
+
+		// right tabs // TODO
+    	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+			rtot_width = m->view_info_w;
+    		for (int i = ltabs + 1; i < m->ntabs; ++i) {
+    			if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
+    	 		break;
+    		rtot_width += sorted_label_widths[i];
+		}
     	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
     	} else {
     	  rmaxsize = (m->ww - m->wx + mw);
@@ -978,8 +1043,7 @@ drawtab(Monitor *m) {
 			x += w;
 			++i;
 		}
-	}
-	else {
+	} else {
     	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
     	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
     	  qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
@@ -2000,6 +2064,41 @@ tile(Monitor *m)
 }
 
 void
+tiletabright(Monitor *m)
+{
+	unsigned int i, n, h, mw, my, ty;
+	float sfacts = 0;
+	char left, right;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++) {
+		if (n >= m->nmaster) sfacts += c->cfact;
+	}
+	if (n == 0) return;
+
+	left = m->nmaster ? (m->nmaster + '0') : 'T';
+	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,=>", left);
+
+	if (n > m->nmaster)
+		mw = m->nmaster ? m->ww * m->mfact : 0;
+	else
+		mw = m->ww;
+	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
+		if (i < m->nmaster) {
+			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
+			if (my + HEIGHT(c) < m->wh)
+				my += HEIGHT(c);
+		} else {
+			h = (m->wh - ty) * (c->cfact / sfacts);
+			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
+			if (ty + HEIGHT(c) < m->wh)
+				ty += HEIGHT(c);
+			sfacts -= c->cfact;
+		}
+	}
+}
+
+void
 tiletab(Monitor *m)
 {
 	unsigned int i, n, mw, my, ty;
@@ -2235,6 +2334,8 @@ updatebarpos(Monitor *m)
     		(m->showtab == showtab_auto) && ((nvis > 1) && (m->lt[m->sellt]->arrange == monocle))
     	) || (
     		((lvis > 1) || (rvis > 1)) && (m->lt[m->sellt]->arrange == tiletab)
+		) || (
+    		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletabright))
 		)
 	) {
 		m->wh -= th;
