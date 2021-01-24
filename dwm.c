@@ -1013,36 +1013,36 @@ drawtab(Monitor *m) {
     	  ++i;
     	}
 
-		// right tabs // TODO
-    	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
-			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
-			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
-			rtot_width = m->view_info_w;
-    		for (int i = ltabs + 1; i < m->ntabs; ++i) {
-    			if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
-    	 		break;
-    		rtot_width += sorted_label_widths[i];
-		}
-    	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
-    	} else {
-    	  rmaxsize = (m->ww - m->wx + mw);
-    	}
+		// // right tabs // TODO
+  //   	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
+		// 	memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
+		// 	qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
+		// 	rtot_width = m->view_info_w;
+  //   		for (int i = ltabs + 1; i < m->ntabs; ++i) {
+  //   			if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
+  //   	 		break;
+  //   		rtot_width += sorted_label_widths[i];
+		// }
+  //   	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
+  //   	} else {
+  //   	  rmaxsize = (m->ww - m->wx + mw);
+  //   	}
 
-    	w = m->wx + mw;
-    	drw_text(drw, x, 0, w - x, th, 0, "", 0);
-    	x = w;
+  //   	w = m->wx + mw;
+  //   	drw_text(drw, x, 0, w - x, th, 0, "", 0);
+  //   	x = w;
 
-    	for (; c; c = c->next) {
-			if (!ISVISIBLE(c)) continue;
-			if (i >= m->ntabs) break;
-			if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
-			w = m->tab_widths[i];
-			if (i == m->ntabs-1) w = m->ww - m->view_info_w - x;
-			drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
-			drw_text(drw, x, 0, w, th, 0, c->name, 0);
-			x += w;
-			++i;
-		}
+  //   	for (; c; c = c->next) {
+		// 	if (!ISVISIBLE(c)) continue;
+		// 	if (i >= m->ntabs) break;
+		// 	if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
+		// 	w = m->tab_widths[i];
+		// 	if (i == m->ntabs-1) w = m->ww - m->view_info_w - x;
+		// 	drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
+		// 	drw_text(drw, x, 0, w, th, 0, c->name, 0);
+		// 	x += w;
+		// 	++i;
+		// }
 	} else {
     	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
     	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
@@ -1073,7 +1073,7 @@ drawtab(Monitor *m) {
 	drw_setscheme(drw, scheme[SchemeNorm]);
 
 	/* cleans interspace between window names and current viewed tag label */
-	w = m->ww - m->view_info_w - x;
+	w = lmaxsize - x - m->view_info_w;
 	drw_text(drw, x, 0, w, th, 0, "", 0);
 
 	/* view info */
@@ -1081,7 +1081,14 @@ drawtab(Monitor *m) {
 	w = m->view_info_w;
 	drw_text(drw, x, 0, w, th, 0, view_info, 0);
 
-	drw_map(drw, m->tabwin, 0, 0, m->ww, th);
+	x += w;
+
+		// m->tabwin = XCreateWindow(dpy, root, m->wx, m->ty, m->ww, th, 0, DefaultDepth(dpy, screen),
+		// 				CopyFromParent, DefaultVisual(dpy, screen),
+		// 				CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+
+    XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, x, th);
+	drw_map(drw, m->tabwin, 0, 0, x, th);
 }
 
 void
@@ -2066,9 +2073,9 @@ tile(Monitor *m)
 void
 tiletabright(Monitor *m)
 {
-	unsigned int i, n, h, mw, my, ty;
+	unsigned int i, n, h, mw, my, ty, rwh;
 	float sfacts = 0;
-	char left, right;
+	char left;
 	Client *c;
 
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++) {
@@ -2078,6 +2085,13 @@ tiletabright(Monitor *m)
 
 	left = m->nmaster ? (m->nmaster + '0') : 'T';
 	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,=>", left);
+
+		// m->wh -= th;
+		// m->ty = m->toptab ? m->wy : m->wy + m->wh;
+
+	// set right window height
+    rwh = m->wh + th;
+    // rwh = m->wh + th;
 
 	if (n > m->nmaster)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
@@ -2089,9 +2103,9 @@ tiletabright(Monitor *m)
 			if (my + HEIGHT(c) < m->wh)
 				my += HEIGHT(c);
 		} else {
-			h = (m->wh - ty) * (c->cfact / sfacts);
+    		h = (rwh - ty) * (c->cfact / sfacts);
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < m->wh)
+			if (ty + HEIGHT(c) < rwh)
 				ty += HEIGHT(c);
 			sfacts -= c->cfact;
 		}
@@ -2340,7 +2354,7 @@ updatebarpos(Monitor *m)
 	) {
 		m->wh -= th;
 		m->ty = m->toptab ? m->wy : m->wy + m->wh;
-		if ( m->toptab )
+		if (m->toptab)
 			m->wy += th;
 	} else {
 		m->ty = -th;
