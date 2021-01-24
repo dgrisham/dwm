@@ -74,7 +74,7 @@ static const char *dmenucmd[]    = { "dmenu_run", "-m", dmenumon, "-fn", dmenufo
 static const char *termcmd[]     = { "urxvt", NULL };
 static const char *browsercmd[]  = { "brave", NULL };
 static const char *browserincognitocmd[]  = { "brave", "-incognito", NULL };
-static const char *musiccmd[]    = { "urxvt", "-e", "ncmpcpp", NULL };
+static const char *musiccmd[]    = { "ncmpcpp", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function           argument */
@@ -91,6 +91,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_d,      incnmaster,        {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,          {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,          {.f = +0.05} },
+	{ MODKEY|ShiftMask,             XK_h,      setcfact,       	  {.f = +0.25} },
+	{ MODKEY|ShiftMask,             XK_l,      setcfact,       	  {.f = -0.25} },
+	{ MODKEY|ShiftMask,             XK_o,      setcfact,       	  {.f =  0.00} },
 	{ MODKEY|ShiftMask,             XK_f,      togglefullscr,     {0} },
 	{ MODKEY,                       XK_Return, zoom,              {0} },
 	{ MODKEY,                       XK_Tab,    view,              {0} },
