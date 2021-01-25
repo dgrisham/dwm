@@ -229,7 +229,7 @@ static void tag(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *);
 static void tiletab(Monitor *);
-static void tiletabright(Monitor *);
+static void tiletableft(Monitor *);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglefullscr(const Arg *arg);
@@ -877,7 +877,7 @@ drawtab(Monitor *m) {
 	int ltabs;
 	unsigned int mw;
 
-    if ((m->lt[m->sellt]->arrange == tiletabright) && m->nmaster == 0) {
+    if ((m->lt[m->sellt]->arrange == tiletableft) && m->nmaster == 0) {
         return;
     }
 
@@ -892,7 +892,7 @@ drawtab(Monitor *m) {
 	  }
 	}
 
-    if (m->lt[m->sellt]->arrange != tiletabright) { // don't show viewinfo for tiletabright
+    if (m->lt[m->sellt]->arrange != tiletableft) { // don't show viewinfo for tiletableft
     	if (0 <= itag && itag < LENGTH(tags)) {
     	  snprintf(view_info, sizeof view_info, "[%s]", tags[itag]);
     	} else {
@@ -992,7 +992,7 @@ drawtab(Monitor *m) {
 			x += w;
 			++i;
 		}
-	} else if (m->lt[m->sellt]->arrange == tiletabright) {
+	} else if (m->lt[m->sellt]->arrange == tiletableft) {
 
     	if (m->ntabs > m->nmaster) {
     		mw = m->nmaster ? m->ww * m->mfact : 0;
@@ -1056,7 +1056,7 @@ drawtab(Monitor *m) {
 	}
 
 	/* cleans interspace between window names and current viewed tag label */
-	if (m->lt[m->sellt]->arrange == tiletabright) {
+	if (m->lt[m->sellt]->arrange == tiletableft) {
     	w = lmaxsize - x;
 	} else {
     	w = m->ww - m->view_info_w - x;
@@ -1067,7 +1067,7 @@ drawtab(Monitor *m) {
 
 	x += w;
 
-	if (m->lt[m->sellt]->arrange == tiletabright) {
+	if (m->lt[m->sellt]->arrange == tiletableft) {
 		// tab bar should only show for the left/master windows, so we
 		// resize the tab window accordingly
         XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, x, th);
@@ -2092,7 +2092,7 @@ tiletab(Monitor *m)
 }
 
 void
-tiletabright(Monitor *m)
+tiletableft(Monitor *m)
 {
 	unsigned int i, n, h, mw, my, ty, rwh;
 	float sfacts = 0;
@@ -2109,6 +2109,8 @@ tiletabright(Monitor *m)
 
 	// set right window height
 	rwh = m->wh;
+	// if the tab bar is showing, offset the right window by the height of the tab bar
+	// (since we don't show the tab bar on the right side)
 	if (m->tabbarvisible) rwh += th;
 
 	if (n > m->nmaster)
@@ -2336,7 +2338,7 @@ updatebarpos(Monitor *m)
     	) || (
     		((lvis > 1) || (rvis > 1)) && (m->lt[m->sellt]->arrange == tiletab)
 		) || (
-    		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletabright))
+    		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletableft))
 		)
 	) {
         m->tabbarvisible = 1;
