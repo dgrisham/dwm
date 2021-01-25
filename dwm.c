@@ -992,6 +992,7 @@ drawtab(Monitor *m) {
 			x += w;
 			++i;
 		}
+
 	} else if (m->lt[m->sellt]->arrange == tiletableft) {
 
     	if (m->ntabs > m->nmaster) {
@@ -1028,7 +1029,9 @@ drawtab(Monitor *m) {
     	  x += w;
     	  ++i;
     	}
+
 	} else {
+
     	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
     	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
     	  qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
@@ -1056,7 +1059,7 @@ drawtab(Monitor *m) {
 	}
 
 	/* cleans interspace between window names and current viewed tag label */
-	if (m->lt[m->sellt]->arrange == tiletableft) {
+	if (m->lt[m->sellt]->arrange == tiletableft) { // only draw bar on lhs
     	w = lmaxsize - x;
 	} else {
     	w = m->ww - m->view_info_w - x;
@@ -2341,13 +2344,13 @@ updatebarpos(Monitor *m)
     		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletableft))
 		)
 	) {
-        m->tabbarvisible = 1;
+        m->tabbarvisible = 1;; // tiletableft needs to know this so it can set the rhs window height accordingly
 		m->wh -= th;
 		m->ty = m->toptab ? m->wy : m->wy + m->wh;
 		if (m->toptab)
 			m->wy += th;
 	} else {
-        m->tabbarvisible = 0;
+        m->tabbarvisible = 0;; // tiletableft needs to know this so it can set the rhs window height accordingly
 		m->ty = -th;
 	}
 }
