@@ -2063,6 +2063,10 @@ tile(Monitor *m)
 	}
 }
 
+// tiletab is a layout that has two 'tiles' (master and non-master), where all of the master tiles
+// are tabbed together on the left side, while the non-master are similarly tabbed together on
+// the right side. this effectively means that you can view two windows at once, and cycle through
+// tabs on each side which window is showing on either side
 void
 tiletab(Monitor *m)
 {
@@ -2094,6 +2098,9 @@ tiletab(Monitor *m)
 	}
 }
 
+// tiletableft is a layout that tabs the master windows in the same way as tiletab, while the
+// non-master windows are tiled. this effectively means that the windows on the left can be cycled
+// through, while the right windows are vertically stacked
 void
 tiletableft(Monitor *m)
 {
