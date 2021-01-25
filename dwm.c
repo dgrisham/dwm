@@ -129,6 +129,7 @@ struct Monitor {
 	unsigned int sellt;
 	unsigned int tagset[2];
 	int showbar;
+	int tabbarvisible;
 	int showtab;
 	int topbar;
 	int toptab;
@@ -288,6 +289,7 @@ static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
 static FILE *fpLog;
+static const int tabbarvisible = 0;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -704,6 +706,7 @@ createmon(void)
 	m->mfact = mfact;
 	m->nmaster = nmaster;
 	m->showbar = showbar;
+	m->tabbarvisible = tabbarvisible;
 	m->showtab = showtab;
 	m->topbar = topbar;
 	m->toptab = toptab;
@@ -874,6 +877,10 @@ drawtab(Monitor *m) {
 	int ltabs;
 	unsigned int mw;
 
+    if ((m->lt[m->sellt]->arrange == tiletabright) && m->nmaster == 0) {
+        return;
+    }
+
 	//view_info: indicate the tag which is displayed in the view
 	for (i = 0; i < LENGTH(tags); ++i) {
 	  if ((selmon->tagset[selmon->seltags] >> i) & 1) {
@@ -885,11 +892,13 @@ drawtab(Monitor *m) {
 	  }
 	}
 
-	if (0 <= itag && itag < LENGTH(tags)) {
-	  snprintf(view_info, sizeof view_info, "[%s]", tags[itag]);
-	} else {
-	  strncpy(view_info, "[...]", sizeof view_info);
-	}
+    if (m->lt[m->sellt]->arrange != tiletabright) { // don't show viewinfo for tiletabright
+    	if (0 <= itag && itag < LENGTH(tags)) {
+    	  snprintf(view_info, sizeof view_info, "[%s]", tags[itag]);
+    	} else {
+    	  strncpy(view_info, "[...]", sizeof view_info);
+    	}
+    }
 
 	view_info[sizeof(view_info) - 1 ] = 0;
 	m->view_info_w = TEXTW(view_info);
@@ -912,10 +921,11 @@ drawtab(Monitor *m) {
 	  }
 
 	  ++m->ntabs;
-	  if (m->ntabs >= MAXTABS && (m->lt[m->sellt]->arrange != tiletab) && (m->lt[m->sellt]->arrange != tiletabright)) break;
+	  if (m->ntabs >= MAXTABS && (m->lt[m->sellt]->arrange != tiletab)) break;
 	}
 
 	if (m->lt[m->sellt]->arrange == tiletab) {
+
     	if (m->ntabs > m->nmaster) {
     		mw = m->nmaster ? m->ww * m->mfact : 0;
     	} else {
@@ -927,11 +937,13 @@ drawtab(Monitor *m) {
  			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
  			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
 	  		ltot_width = 0;
+
 	  		for (int i = 0; i < ltabs; ++i) {
-    	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
-				break;
-			ltot_width += sorted_label_widths[i];
-		}
+        	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
+    				break;
+    			ltot_width += sorted_label_widths[i];
+    		}
+
 			lmaxsize = (m->wx + mw - ltot_width) / (ltabs - i);
     	} else {
 			lmaxsize = m->wx + mw;
@@ -954,11 +966,13 @@ drawtab(Monitor *m) {
 			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
 			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
 			rtot_width = m->view_info_w;
-    	  for (int i = ltabs + 1; i < m->ntabs; ++i) {
-    		if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww)) break;
-    		rtot_width += sorted_label_widths[i];
-    	  }
-    	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
+
+  			for (int i = ltabs + 1; i < m->ntabs; ++i) {
+				if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww)) break;
+    			rtot_width += sorted_label_widths[i];
+	  		}
+
+    	  	rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
     	} else {
     	  rmaxsize = (m->ww - m->wx + mw);
     	}
@@ -968,7 +982,6 @@ drawtab(Monitor *m) {
     	x = w;
 
     	for (; c; c = c->next) {
-	  		if (c != m->sel) continue;
 			if (!ISVISIBLE(c)) continue;
 			if (i >= m->ntabs) break;
 			if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
@@ -980,22 +993,25 @@ drawtab(Monitor *m) {
 			++i;
 		}
 	} else if (m->lt[m->sellt]->arrange == tiletabright) {
+
     	if (m->ntabs > m->nmaster) {
     		mw = m->nmaster ? m->ww * m->mfact : 0;
     	} else {
     		mw = m->ww;
     	}
 
-		// left tabs
+		// left tabs (no right tabs in this layout)
 		if (ltot_width > m->ww) { // not enough space to display the labels, they need to be truncated
  			memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
  			qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
 	  		ltot_width = 0;
+
 	  		for (int i = 0; i < ltabs; ++i) {
-    	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
-				break;
-			ltot_width += sorted_label_widths[i];
-		}
+        	    if (ltot_width + (ltabs - i) * sorted_label_widths[i] > m->ww)
+    				break;
+    			ltot_width += sorted_label_widths[i];
+    		}
+
 			lmaxsize = (m->wx + mw - ltot_width) / (ltabs - i);
     	} else {
 			lmaxsize = m->wx + mw;
@@ -1012,37 +1028,6 @@ drawtab(Monitor *m) {
     	  x += w;
     	  ++i;
     	}
-
-		// // right tabs // TODO
-  //   	if (rtot_width > m->ww) { // not enough space to display the labels, they need to be truncated
-		// 	memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
-		// 	qsort(sorted_label_widths, m->ntabs, sizeof(int), cmpint);
-		// 	rtot_width = m->view_info_w;
-  //   		for (int i = ltabs + 1; i < m->ntabs; ++i) {
-  //   			if (rtot_width + (m->ntabs - i) * sorted_label_widths[i] > (mw - m->ww))
-  //   	 		break;
-  //   		rtot_width += sorted_label_widths[i];
-		// }
-  //   	  rmaxsize = (m->ww - m->wx + mw - rtot_width) / (m->ntabs - i);
-  //   	} else {
-  //   	  rmaxsize = (m->ww - m->wx + mw);
-  //   	}
-
-  //   	w = m->wx + mw;
-  //   	drw_text(drw, x, 0, w - x, th, 0, "", 0);
-  //   	x = w;
-
-  //   	for (; c; c = c->next) {
-		// 	if (!ISVISIBLE(c)) continue;
-		// 	if (i >= m->ntabs) break;
-		// 	if (m->tab_widths[i] > rmaxsize) m->tab_widths[i] = rmaxsize;
-		// 	w = m->tab_widths[i];
-		// 	if (i == m->ntabs-1) w = m->ww - m->view_info_w - x;
-		// 	drw_setscheme(drw, scheme[(c == m->sel) ? SchemeSel : SchemeNorm]);
-		// 	drw_text(drw, x, 0, w, th, 0, c->name, 0);
-		// 	x += w;
-		// 	++i;
-		// }
 	} else {
     	if (tot_width > m->ww) { // not enough space to display the labels, they need to be truncated
     	  memcpy(sorted_label_widths, m->tab_widths, sizeof(int) * m->ntabs);
@@ -1070,25 +1055,30 @@ drawtab(Monitor *m) {
     	}
 	}
 
-	drw_setscheme(drw, scheme[SchemeNorm]);
-
 	/* cleans interspace between window names and current viewed tag label */
-	w = lmaxsize - x - m->view_info_w;
+	if (m->lt[m->sellt]->arrange == tiletabright) {
+    	w = lmaxsize - x;
+	} else {
+    	w = m->ww - m->view_info_w - x;
+	}
 	drw_text(drw, x, 0, w, th, 0, "", 0);
 
-	/* view info */
+	drw_setscheme(drw, scheme[SchemeNorm]);
+
 	x += w;
+
+	if (m->lt[m->sellt]->arrange == tiletabright) {
+		// tab bar should only show for the left/master windows, so we
+		// resize the tab window accordingly
+        XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, x, th);
+    	drw_map(drw, m->tabwin, 0, 0, x, th);
+    	return;
+	}
+
+	/* view info */
 	w = m->view_info_w;
 	drw_text(drw, x, 0, w, th, 0, view_info, 0);
-
-	x += w;
-
-		// m->tabwin = XCreateWindow(dpy, root, m->wx, m->ty, m->ww, th, 0, DefaultDepth(dpy, screen),
-		// 				CopyFromParent, DefaultVisual(dpy, screen),
-		// 				CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
-
-    XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, x, th);
-	drw_map(drw, m->tabwin, 0, 0, x, th);
+	drw_map(drw, m->tabwin, 0, 0, m->ww, th);
 }
 
 void
@@ -2071,48 +2061,6 @@ tile(Monitor *m)
 }
 
 void
-tiletabright(Monitor *m)
-{
-	unsigned int i, n, h, mw, my, ty, rwh;
-	float sfacts = 0;
-	char left;
-	Client *c;
-
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++) {
-		if (n >= m->nmaster) sfacts += c->cfact;
-	}
-	if (n == 0) return;
-
-	left = m->nmaster ? (m->nmaster + '0') : 'T';
-	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,=>", left);
-
-		// m->wh -= th;
-		// m->ty = m->toptab ? m->wy : m->wy + m->wh;
-
-	// set right window height
-    rwh = m->wh + th;
-    // rwh = m->wh + th;
-
-	if (n > m->nmaster)
-		mw = m->nmaster ? m->ww * m->mfact : 0;
-	else
-		mw = m->ww;
-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
-		if (i < m->nmaster) {
-			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
-		} else {
-    		h = (rwh - ty) * (c->cfact / sfacts);
-			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < rwh)
-				ty += HEIGHT(c);
-			sfacts -= c->cfact;
-		}
-	}
-}
-
-void
 tiletab(Monitor *m)
 {
 	unsigned int i, n, mw, my, ty;
@@ -2139,6 +2087,45 @@ tiletab(Monitor *m)
 			resize(c, m->wx + mw, m->wy, m->ww - mw - (2*c->bw), m->wh - 2 * c->bw, 0);
 			if (ty + HEIGHT(c) < m->wh)
 				ty += HEIGHT(c);
+		}
+	}
+}
+
+void
+tiletabright(Monitor *m)
+{
+	unsigned int i, n, h, mw, my, ty, rwh;
+	float sfacts = 0;
+	char left;
+	Client *c;
+
+	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++) {
+		if (n >= m->nmaster) sfacts += c->cfact;
+	}
+	if (n == 0) return;
+
+	left = m->nmaster ? (m->nmaster + '0') : 'T';
+	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,=>", left);
+
+	// set right window height
+	rwh = m->wh;
+	if (m->tabbarvisible) rwh += th;
+
+	if (n > m->nmaster)
+		mw = m->nmaster ? m->ww * m->mfact : 0;
+	else
+		mw = m->ww;
+	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
+		if (i < m->nmaster) {
+			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
+			if (my + HEIGHT(c) < m->wh)
+				my += HEIGHT(c);
+		} else {
+    		h = (rwh - ty) * (c->cfact / sfacts);
+			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
+			if (ty + HEIGHT(c) < rwh)
+				ty += HEIGHT(c);
+			sfacts -= c->cfact;
 		}
 	}
 }
@@ -2352,11 +2339,13 @@ updatebarpos(Monitor *m)
     		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletabright))
 		)
 	) {
+        m->tabbarvisible = 1;
 		m->wh -= th;
 		m->ty = m->toptab ? m->wy : m->wy + m->wh;
 		if (m->toptab)
 			m->wy += th;
 	} else {
+        m->tabbarvisible = 0;
 		m->ty = -th;
 	}
 }
