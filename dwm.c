@@ -864,7 +864,6 @@ drawtab(Monitor *m) {
 	int i;
 	int itag = -1;
 	char view_info[50];
-	// int view_info_w = 0;
 	int sorted_label_widths[MAXTABS];
 	int tot_width;
 	int ltot_width = 0;
@@ -881,7 +880,7 @@ drawtab(Monitor *m) {
         return;
     }
 
-	//view_info: indicate the tag which is displayed in the view
+	// view_info: indicate the tag which is displayed in the view
 	for (i = 0; i < LENGTH(tags); ++i) {
 	  if ((selmon->tagset[selmon->seltags] >> i) & 1) {
 	    if (itag >=0){ //more than one tag selected
@@ -1071,8 +1070,8 @@ drawtab(Monitor *m) {
 	x += w;
 
 	if (m->lt[m->sellt]->arrange == tiletableft) {
-		// tab bar should only show for the left/master windows, so we
-		// resize the tab window accordingly
+		/* tab bar should only show for the left/master windows,
+		   so we resize the tab window accordingly */
         XMoveResizeWindow(dpy, m->tabwin, m->wx, m->ty, x, th);
     	drw_map(drw, m->tabwin, 0, 0, x, th);
     	return;
@@ -2063,10 +2062,10 @@ tile(Monitor *m)
 	}
 }
 
-// tiletab is a layout that has two 'tiles' (master and non-master), where all of the master tiles
-// are tabbed together on the left side, while the non-master are similarly tabbed together on
-// the right side. this effectively means that you can view two windows at once, and cycle through
-// tabs on each side which window is showing on either side
+/* tiletab is a layout that has two 'tiles' (master and non-master), where all of the master tiles
+ * are tabbed together on the left side, while the non-master are similarly tabbed together on
+ * the right side. this effectively means that you can view two windows at once, and cycle through
+ * tabs on each side which window is showing on either side */
 void
 tiletab(Monitor *m)
 {
@@ -2098,46 +2097,54 @@ tiletab(Monitor *m)
 	}
 }
 
-// tiletableft is a layout that tabs the master windows in the same way as tiletab, while the
-// non-master windows are tiled. this effectively means that the windows on the left can be cycled
-// through, while the right windows are vertically stacked
+/* tiletableft is a layout that tabs the master windows in the same way as tiletab, while the
+ * non-master windows are tiled. this effectively means that the windows on the left can be cycled
+ * through, while the right windows are vertically stacked
+ */
 void
 tiletableft(Monitor *m)
 {
-	unsigned int i, n, h, mw, my, ty, rwh;
+	unsigned int i, n, h, mw, my, ty, swh;
 	float sfacts = 0;
 	char left;
 	Client *c;
 
+	/* calculate sfacts, which is the sum of the cfacts values for tiled (stack) windows */
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++) {
 		if (n >= m->nmaster) sfacts += c->cfact;
 	}
+	/* no windows, do nothing */
 	if (n == 0) return;
 
+	/* layout symbol is of the form <T,=>, where T is the number
+	 * of master windows (just shows T if there are none)
+	 */
 	left = m->nmaster ? (m->nmaster + '0') : 'T';
 	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,=>", left);
 
-	// set right window height
-	rwh = m->wh;
-	// if the tab bar is showing, offset the right window by the height of the tab bar
-	// (since we don't show the tab bar on the right side)
-	if (m->tabbarvisible) rwh += th;
+	/* set total stack window height */
+	swh = m->wh;
+	/* if the tab bar is showing, offset the right window by the height of the tab bar
+	 * (since we don't show the tab bar on the right side) */
+	if (m->tabbarvisible) swh += th;
 
-	if (n > m->nmaster)
+	/* set master window width */
+	if (n > m->nmaster) /* there are windows in the stack, scale down master accordingly */
 		mw = m->nmaster ? m->ww * m->mfact : 0;
-	else
+	else /* no windows in stack, master width equal to full window width */
 		mw = m->ww;
+
+	/* size the windows */
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
-		if (i < m->nmaster) {
+		if (i < m->nmaster) { /* master window */
+			/* these windows are tabbed, so set them all to the same coordinates + width/height */
 			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
-		} else {
-    		h = (rwh - ty) * (c->cfact / sfacts);
+		} else { /* stack window */
+    		h = (swh - ty) * (c->cfact / sfacts); /* scale height based on remaining stack height and relative weight */
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
-			if (ty + HEIGHT(c) < rwh)
+			if (ty + HEIGHT(c) < swh) /* current height + height of client doesn't exceed max height */
 				ty += HEIGHT(c);
-			sfacts -= c->cfact;
+			sfacts -= c->cfact; /* subtract cfact so stack factor represents total for remaining stack windows */
 		}
 	}
 }
@@ -2351,13 +2358,13 @@ updatebarpos(Monitor *m)
     		((lvis > 1) && (m->lt[m->sellt]->arrange == tiletableft))
 		)
 	) {
-        m->tabbarvisible = 1;; // tiletableft needs to know this so it can set the rhs window height accordingly
+        m->tabbarvisible = 1; // tiletableft needs to know this so it can set the rhs window height accordingly
 		m->wh -= th;
 		m->ty = m->toptab ? m->wy : m->wy + m->wh;
 		if (m->toptab)
 			m->wy += th;
 	} else {
-        m->tabbarvisible = 0;; // tiletableft needs to know this so it can set the rhs window height accordingly
+        m->tabbarvisible = 0; // tiletableft needs to know this so it can set the rhs window height accordingly
 		m->ty = -th;
 	}
 }
