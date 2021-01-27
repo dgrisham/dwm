@@ -2065,7 +2065,8 @@ tile(Monitor *m)
 /* tiletab is a layout that has two 'tiles' (master and non-master), where all of the master tiles
  * are tabbed together on the left side, while the non-master are similarly tabbed together on
  * the right side. this effectively means that you can view two windows at once, and cycle through
- * tabs on each side which window is showing on either side */
+ * tabs on each side which window is showing on either side
+ */
 void
 tiletab(Monitor *m)
 {
@@ -2073,23 +2074,32 @@ tiletab(Monitor *m)
 	char left, right;
 	Client *c;
 
+	/* calculate total number of windows */
 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), ++n);
+	/* no windows, do nothing */
 	if (n == 0) return;
 
+	/* layout symbol is of the form <T,T>, where the first T is the number of
+     * master windows, and the second is the number of stack windows (either/both
+     * just T if there are no master/stack windows, resp.)
+	 */
 	left = m->nmaster ? (m->nmaster + '0') : 'T';
 	right = n - m->nmaster ? (n - m->nmaster + '0') : 'T';
 	snprintf(m->ltsymbol, sizeof m->ltsymbol, "<%c,%c>", left, right);
 
-	if (n > m->nmaster)
+	/* set master window width */
+	if (n > m->nmaster) /* there are windows in the stack, scale down master accordingly */
 		mw = m->nmaster ? m->ww * m->mfact : 0;
-	else
+	else /* no windows in stack, master width equal to full window width */
 		mw = m->ww;
+
+	/* size the windows */
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
-		if (i < m->nmaster) {
+		if (i < m->nmaster) { /* master window */
 			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
 			if (my + HEIGHT(c) < m->wh)
 				my += HEIGHT(c);
-		} else {
+		} else { /* stack window */
 			resize(c, m->wx + mw, m->wy, m->ww - mw - (2*c->bw), m->wh - 2 * c->bw, 0);
 			if (ty + HEIGHT(c) < m->wh)
 				ty += HEIGHT(c);
