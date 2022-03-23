@@ -2065,7 +2065,7 @@ tile(Monitor *m)
 /* tiletab is a layout that has two 'tiles' (master and non-master), where all of the master tiles
  * are tabbed together on the left side, while the non-master are similarly tabbed together on
  * the right side. this effectively means that you can view two windows at once, and cycle through
- * tabs on each side which window is showing on either side
+ * tabs on each side to change which window is showing on either side
  */
 void
 tiletab(Monitor *m)
@@ -2094,21 +2094,22 @@ tiletab(Monitor *m)
 		mw = m->ww;
 
 	/* size the windows */
+	/* TODO: sometimes the tab disappears -- see if missing usage of my + ty have anything to do with this */
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++) {
 		if (i < m->nmaster) { /* master window */
 			resize(c, m->wx, m->wy, mw - (2*c->bw), m->wh - 2 * c->bw, 0);
-			if (my + HEIGHT(c) < m->wh)
-				my += HEIGHT(c);
+			// if (my + HEIGHT(c) < m->wh)
+			// 	my += HEIGHT(c);
 		} else { /* stack window */
 			resize(c, m->wx + mw, m->wy, m->ww - mw - (2*c->bw), m->wh - 2 * c->bw, 0);
-			if (ty + HEIGHT(c) < m->wh)
-				ty += HEIGHT(c);
+			// if (ty + HEIGHT(c) < m->wh)
+			// 	ty += HEIGHT(c);
 		}
 	}
 }
 
 /* tiletableft is a layout that tabs the master windows in the same way as tiletab, while the
- * non-master windows are tiled. this effectively means that the windows on the left can be cycled
+ * non-master windows are tabbed. this effectively means that the windows on the left can be cycled
  * through, while the right windows are vertically stacked
  */
 void
