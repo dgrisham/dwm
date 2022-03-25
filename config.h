@@ -23,9 +23,9 @@ static const char col_cyan[]        = "#00cccc";
 static const char col_yellow[]      = "#b1ec40";
 static const char *colors[][3]      = {
 	/*                  fg         bg         border   */
-	[SchemeNorm]    = { col_white, col_black,  col_black },
-	[SchemeSel]     = { col_black, col_cyan, col_yellow  },
-	[SchemeSelWin]  = { col_white, col_black,  col_white },
+	[SchemeNorm]    = { col_white, col_black, col_black  },
+	[SchemeSel]     = { col_black, col_gray4, col_yellow },
+	[SchemeSelWin]  = { col_white, col_black, col_white  },
 };
 static const int focusonwheel       = 0;
 
@@ -72,11 +72,11 @@ static const char* Logfile = NULL;
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[]    = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_black, "-nf", col_white, "-sb", col_white, "-sf", col_black, NULL };
-static const char *termcmd[]     = { "st", NULL };
-static const char *browsercmd[]  = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", "duckduckgo.com", NULL };
+static const char *dmenucmd[]       = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_black, "-nf", col_white, "-sb", col_white, "-sf", col_black, NULL };
+static const char *termcmd[]        = { "st", NULL };
+static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN",  "xzx.ro", NULL };
 // static const char *browsercmd[]  = { "brave", NULL };
-static const char *browserincognitocmd[]  = { "brave", "-incognito", NULL };
+// static const char *browserincognitocmd[]  = { "brave", "-incognito", NULL };
 // static const char *musiccmd[]    = { "ncmpcpp", NULL };
 
 static Key keys[] = {
@@ -84,7 +84,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_p,      spawn,             {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,             {.v = termcmd } },
 	{ MODKEY,                       XK_b,      spawn,             {.v = browsercmd } },
-	{ MODKEY|ShiftMask,             XK_b,      spawn,             {.v = browserincognitocmd } },
+	// { MODKEY|ShiftMask,             XK_b,      spawn,             {.v = browserincognitocmd } },
 	// { MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
 	{ MODKEY,                       XK_w,      tabmode,           {-1} },
@@ -106,7 +106,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_F3,     setlayout,         {.v = &layouts[2]} },
 	{ MODKEY,                       XK_F4,     setlayout,         {.v = &layouts[3]} },
 	{ MODKEY,                       XK_F5,     setlayout,         {.v = &layouts[4]} },
-	{ MODKEY|ShiftMask,             XK_m,      monocle_togglebar, {0} },
+	// { MODKEY|ShiftMask,             XK_m,      monocle_togglebar, {0} },
 	{ MODKEY,                       XK_space,  setlayout,         {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating,    {0} },
 	{ MODKEY,                       XK_0,      view,              {.ui = ~0 } },

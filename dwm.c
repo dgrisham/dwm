@@ -217,7 +217,6 @@ static void setfocus(Client *c);
 static void setfullscreen(Client *c, int fullscreen);
 static void setlayout(const Arg *arg);
 static void setcfact(const Arg *arg);
-static void monocle_togglebar(const Arg *arg);
 static void setmfact(const Arg *arg);
 static void setup(void);
 static void seturgent(Client *c, int urg);
@@ -2695,12 +2694,6 @@ zoom(const Arg *arg)
 		if (!c || !(c = nexttiled(c->next)))
 			return;
 	pop(c);
-}
-
-void
-monocle_togglebar(const Arg *arg) {
-    setlayout((void*)&layouts[2]);
-    togglebar(0);
 }
 
 int
