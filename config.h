@@ -12,7 +12,6 @@ enum showtab_modes { showtab_never, showtab_auto, showtab_nmodes, showtab_always
 static const int showtab			= showtab_auto;        /* Default tab bar show mode */
 static const int toptab				= False;               /* False means bottom tab bar */
 static const char *fonts[]          = { "Inconsolata Nerd Font Mono:pixelsize=16:antialias=true" };
-static const char dmenufont[]       = "Inconsolata Nerd Font Mono:pixelsize=16:antialias=true";
 static const char col_white[]       = "#ffffff";
 static const char col_black[]       = "#000000";
 static const char col_gray1[]       = "#222222";
@@ -72,7 +71,7 @@ static const char* Logfile = NULL;
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[]       = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_black, "-nf", col_white, "-sb", col_white, "-sf", col_black, NULL };
+static const char *dmenucmd[]       = { "dmenu_run", "-m", dmenumon, NULL };
 static const char *termcmd[]        = { "st", NULL };
 static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", NULL };
 // static const char *browsercmd[]  = { "brave", NULL };
