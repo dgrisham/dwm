@@ -72,6 +72,7 @@ static const char* Logfile = NULL;
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[]       = { "dmenu_run", "-m", dmenumon, NULL };
+static const char *bgcmd[]          = { "fehbg", NULL };
 static const char *termcmd[]        = { "st", NULL };
 static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", NULL };
 // static const char *browsercmd[]  = { "brave", NULL };
@@ -80,9 +81,10 @@ static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x"
 
 static Key keys[] = {
 	/* modifier                     key        function           argument */
-	{ MODKEY|ShiftMask,             XK_p,      spawn,             {.v = dmenucmd } },
+	{ MODKEY,                       XK_p,      spawn,             {.v = dmenucmd } },
 	{ MODKEY|ShiftMask,             XK_Return, spawn,             {.v = termcmd } },
 	{ MODKEY,                       XK_b,      spawn,             {.v = browsercmd } },
+	{ MODKEY|ShiftMask,             XK_p,      spawn,             {.v = bgcmd } },
 	// { MODKEY|ShiftMask,             XK_b,      spawn,             {.v = browserincognitocmd } },
 	// { MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
