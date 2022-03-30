@@ -86,7 +86,7 @@ static Key keys[] = {
 	// { MODKEY|ShiftMask,             XK_b,      spawn,             {.v = browserincognitocmd } },
 	// { MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
-	{ MODKEY,                       XK_w,      tabmode,           {-1} },
+	{ MODKEY,                       XK_t,      tabmode,           {-1} },
 	{ MODKEY,                       XK_j,      focusstack,        {.i = +1 } },
 	{ MODKEY,                       XK_k,      focusstack,        {.i = -1 } },
 	{ MODKEY,                       XK_i,      incnmaster,        {.i = +1 } },
