@@ -816,7 +816,7 @@ drawbar(Monitor *m)
 
 	if ((w = m->ww - tw - x) > bh) {
 		if (m->sel) {
-            drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+            drw_setscheme(drw, scheme[SchemeNorm]);
             drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
 			// int mid = (m->ww - TEXTW(m->sel->name) - x) / 2;
 			// drw_setscheme(drw, scheme[m == selmon ? SchemeSelWin : SchemeNorm]);
@@ -2342,7 +2342,7 @@ updatebarpos(Monitor *m)
 	if (m->showbar) {
 		m->wh -= bh;
 		m->by = m->topbar ? m->wy : m->wy + m->wh;
-		if ( m->topbar )
+		if (m->topbar)
 			m->wy += bh;
 	} else {
 		m->by = -bh;
