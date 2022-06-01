@@ -1,7 +1,7 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 4;        /* border pixel of windows */
+static const unsigned int borderpx  = 1;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
@@ -22,9 +22,9 @@ static const char col_cyan[]        = "#00cccc";
 static const char col_yellow[]      = "#b1ec40";
 static const char *colors[][3]      = {
 	/*                  fg         bg         border   */
-	[SchemeNorm]    = { col_white, col_black, col_black  },
-	[SchemeSel]     = { col_black, col_gray4, col_yellow },
-	[SchemeSelWin]  = { col_white, col_black, col_white  },
+	[SchemeNorm]    = { col_white, col_black, col_black },
+	[SchemeSel]     = { col_black, col_gray4, col_white },
+	[SchemeSelWin]  = { col_white, col_black, col_white },
 };
 static const int focusonwheel       = 0;
 
@@ -55,8 +55,8 @@ static const Layout layouts[] = {
 	{ "<T,=>",    tiletableft },
 };
 
-// static const char* Logfile = "/var/log/dwm/debug.log";
-static const char* Logfile = NULL;
+static const char* Logfile = "/home/grish/.cache/dwm/debug.log";
+// static const char* Logfile = NULL;
 
 /* key definitions */
 #define MODKEY Mod4Mask
@@ -77,7 +77,7 @@ static const char *termcmd[]        = { "st", NULL };
 static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", NULL };
 // static const char *browsercmd[]  = { "brave", NULL };
 // static const char *browserincognitocmd[]  = { "brave", "-incognito", NULL };
-// static const char *musiccmd[]    = { "ncmpcpp", NULL };
+static const char *musiccmd[]    = { "grishcompoop", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function           argument */
@@ -86,7 +86,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_b,      spawn,             {.v = browsercmd } },
 	{ MODKEY|ShiftMask,             XK_p,      spawn,             {.v = bgcmd } },
 	// { MODKEY|ShiftMask,             XK_b,      spawn,             {.v = browserincognitocmd } },
-	// { MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
+	{ MODKEY,                       XK_m,      spawn,             {.v = musiccmd } },
 	{ MODKEY,                       XK_s,      togglebar,         {0} },
 	{ MODKEY,                       XK_t,      tabmode,           {-1} },
 	{ MODKEY,                       XK_j,      focusstack,        {.i = +1 } },
