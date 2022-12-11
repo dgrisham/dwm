@@ -74,10 +74,10 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[]       = { "dmenu_run", "-m", dmenumon, NULL };
 static const char *bgcmd[]          = { "fehbg", NULL };
 static const char *termcmd[]        = { "st", NULL };
-static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", NULL };
-// static const char *browsercmd[]  = { "brave", NULL };
+// static const char *browsercmd[]     = { "tabbed", "-c", "-r2", "surf", "-e", "x", "-SN", NULL };
+static const char *browsercmd[]  = { "brave", NULL };
 // static const char *browserincognitocmd[]  = { "brave", "-incognito", NULL };
-static const char *musiccmd[]    = { "grishcompoop", NULL };
+static const char *musiccmd[]    = { "bbmp", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function           argument */
